@@ -1,0 +1,22 @@
+# PlatformIO
+.pio/
+.vscode/
+firmware/**/.pio/
+
+# Secrets
+firmware/shared/config/secrets.h
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Database
+scorekeeper/server/db/*.db
+scorekeeper/server/db/*.sqlite
+
+# OS
+.DS_Store
+Thumbs.db
