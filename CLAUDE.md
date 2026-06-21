@@ -13,7 +13,7 @@ records completions across all holes for a leaderboard/dashboard.
   varies per hole) and drives LEDs / motors / other actuators in response.
   Some holes may need 2 ESP32 boards (e.g. one per player station) — not
   yet finalized per-hole, decide during that hole's design.
-- **Hole 1:** ESP32 *plus* a Raspberry Pi. The Pi handles heavier compute
+- **Hole 1:** ESP32 *plus* a separate Linux-based computer (could be a Raspberry Pi but doesn't have to be). The Pi handles heavier compute
   for this hole specifically (e.g. anything beyond simple sensor→actuator
   logic — vision, more complex state, etc.). The ESP32 still owns direct
   sensor/actuator I/O; the Pi is local compute for hole 1 only, not a
@@ -120,14 +120,10 @@ mini-golf/
 │   │   └── config/
 │   │       └── secrets.h.example   # wifi creds, broker IP/port — actual secrets.h gitignored
 │   └── holes/
-│       ├── hole1_node/             # ESP32 firmware that pairs with hole1's Pi
+│       ├── hole1_node/             # ESP32 firmware that pairs with hole1's Linux computer
 │       ├── hole2_node/             # (and hole2_node_b/ etc. if a hole needs 2 boards)
 │       ├── hole3_node/
 │       └── hole4_node/
-├── hole-compute/
-│   └── hole1_pi/
-│       ├── game_logic.py           # Pi-side compute specific to hole 1
-│       └── requirements.txt
 ├── scorekeeper/
 │   ├── server/
 │   │   ├── mqtt_listener.py        # subscribes golf/+/event, golf/+/status
@@ -147,11 +143,3 @@ mini-golf/
 - Where Mosquitto broker physically runs (hole 1's Pi vs. a separate
   always-on box) — leaning toward separate box to avoid coupling broker
   uptime to hole 1's Pi, but not finalized.
-
-## Suggested First Milestone
-Build hole 4 (likely the structurally simplest hole) end-to-end first as a
-template for the others: ESP32 sensor input → FastLED feedback →
-HoleStateMachine transition → MQTT event publish → scorekeeper receives,
-persists, and shows it on the dashboard. Once that full path works, the
-remaining holes are mostly "swap in this hole's specific sensor/actuator
-logic" against the same shared `HoleNode`/`HoleStateMachine` libraries.
