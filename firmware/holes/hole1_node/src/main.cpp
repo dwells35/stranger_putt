@@ -1,37 +1,64 @@
 #include <Arduino.h>
 #include <FastLED.h>
 #include "HoleNode.h"
+#include "HoleStateMachine.h"
 #include "LEDPatterns.h"
 
 #define LED_PIN      13
 #define NUM_LEDS     60
 #define LED_TYPE     WS2811
 #define COLOR_ORDER  GRB
-#define GOAL_PATTERN_DURATION_MS 3000
+
+// How long the completion animation plays before resetting
+#define COMPLETE_DURATION_MS 3000
 
 CRGB leds[NUM_LEDS];
 HoleNode node("hole1");
+HoleStateMachine hsm(node, "hole1", COMPLETE_DURATION_MS);
 LEDPatterns patterns(leds, NUM_LEDS);
 
-static bool anim_running = false;
-static bool full_on = false;
-static u32_t previous_millis;
+// --- State-enter callbacks (one-shot on each transition) ---
+
+void onIdle() {
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    FastLED.show();
+}
+
+void onReady() {
+    // Brief white pulse so players know their input was registered
+    fill_solid(leds, NUM_LEDS, CRGB::White);
+    FastLED.show();
+}
+
+void onRunning() {
+    fill_solid(leds, NUM_LEDS, CRGB::Cyan);
+    FastLED.show();
+}
+
+void onResetting() {
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    FastLED.show();
+}
+
+void onFault() {
+    fill_solid(leds, NUM_LEDS, CRGB::Red);
+    FastLED.show();
+}
+
+// --- MQTT command → state machine ---
+//
+//   register → IDLE→READY       (player steps up)
+//   start    → READY→RUNNING    (game begins)
+//   goal     → RUNNING→COMPLETE (hole scored)
+//   fault    → any→FAULT        (emergency stop)
+//   reset    → any→RESETTING    (admin reset)
 
 void onMqttMessage(String& topic, String& payload) {
-    if (payload == "start") {
-        full_on = true;
-        fill_solid(leds, NUM_LEDS, CRGB::Cyan);
-        FastLED.show();
-    } else if (payload == "stop") {
-        full_on = false;
-        fill_solid(leds, NUM_LEDS, CRGB::Black);
-        FastLED.show();
-    }
-    else if (payload == "goal")
-    {
-        anim_running = true;
-        previous_millis = millis();
-    }
+    if      (payload == "register") hsm.registerPlayer();
+    else if (payload == "start")    hsm.startGame();
+    else if (payload == "goal")     hsm.completeGame();
+    else if (payload == "fault")    hsm.fault();
+    else if (payload == "reset")    hsm.reset();
 }
 
 void setup() {
@@ -42,19 +69,24 @@ void setup() {
     FastLED.setMaxRefreshRate(60);
     FastLED.setBrightness(64);
 
+    hsm.onEnterIdle(onIdle);
+    hsm.onEnterReady(onReady);
+    hsm.onEnterRunning(onRunning);
+    hsm.onEnterResetting(onResetting);
+    hsm.onEnterFault(onFault);
+
     node.onMessage(onMqttMessage);
     node.subscribe("golf/hole1/control");
     node.begin();
+    hsm.begin();
 }
 
 void loop() {
     node.loop();
-    if (full_on && anim_running && ((millis() - previous_millis) < GOAL_PATTERN_DURATION_MS))
-    {
+    hsm.loop();
+
+    // Chase animation runs continuously during COMPLETE
+    if (hsm.getState() == HoleState::COMPLETE) {
         patterns.chase(CRGB::Cyan);
-    } else if (full_on && anim_running) {
-        anim_running = false;
-        fill_solid(leds, NUM_LEDS, CRGB::Cyan);
-        FastLED.show();
     }
 }
