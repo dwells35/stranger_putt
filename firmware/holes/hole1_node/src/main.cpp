@@ -51,6 +51,17 @@ void onReset() {
     FastLED.show();
 }
 
+void onPlayerDied() {
+    for (int i = 0; i < 3; i++) {
+        fill_solid(leds, NUM_LEDS, CRGB::Red);
+        FastLED.show();
+        delay(80);
+        fill_solid(leds, NUM_LEDS, CRGB::Black);
+        FastLED.show();
+        delay(80);
+    }
+}
+
 void onFault() {
     fill_solid(leds, NUM_LEDS, CRGB::Red);
     FastLED.show();
@@ -68,6 +79,7 @@ void onMqttMessage(String& topic, String& payload) {
     if      (payload == "register") hsm.registerPlayer();
     else if (payload == "start")    hsm.startGame();
     else if (payload == "goal")     hsm.completeGame();
+    else if (payload == "death")    hsm.playerDied();
     else if (payload == "fault")    hsm.fault();
     else if (payload == "reset")    hsm.reset();
 }
@@ -106,6 +118,7 @@ void setup() {
     hsm.onEnterReady(onReady);
     hsm.onEnterRun(onRun);
     hsm.onEnterReset(onReset);
+    hsm.onPlayerDied(onPlayerDied);
     hsm.onEnterFault(onFault);
 
     node.onMessage(onMqttMessage);

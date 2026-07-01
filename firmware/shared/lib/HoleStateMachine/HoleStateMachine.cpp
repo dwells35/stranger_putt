@@ -43,6 +43,11 @@ void HoleStateMachine::completeGame() {
     transitionTo(HoleState::COMPLETE);
 }
 
+void HoleStateMachine::playerDied() {
+    if (_state != HoleState::RUN) return;
+    if (_onPlayerDied) _onPlayerDied();
+}
+
 void HoleStateMachine::fault() {
     transitionTo(HoleState::FAULT);
 }
@@ -86,7 +91,8 @@ void HoleStateMachine::publishCompletionEvent() {
 
 void HoleStateMachine::onEnterIdle(void (*cb)())      { _onIdle = cb; }
 void HoleStateMachine::onEnterReady(void (*cb)())     { _onReady = cb; }
-void HoleStateMachine::onEnterRun(void (*cb)())       { _onRun = cb; }
-void HoleStateMachine::onEnterComplete(void (*cb)())  { _onComplete = cb; }
+void HoleStateMachine::onEnterRun(void (*cb)())        { _onRun = cb; }
+void HoleStateMachine::onEnterComplete(void (*cb)())   { _onComplete = cb; }
+void HoleStateMachine::onPlayerDied(void (*cb)())      { _onPlayerDied = cb; }
 void HoleStateMachine::onEnterReset(void (*cb)())     { _onReset = cb; }
 void HoleStateMachine::onEnterFault(void (*cb)())     { _onFault = cb; }

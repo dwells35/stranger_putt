@@ -23,6 +23,7 @@ public:
     void registerPlayer(const char* playerId = "anonymous");
     void startGame();
     void completeGame();
+    void playerDied();
     void fault();
     void reset();
 
@@ -33,6 +34,7 @@ public:
     void onEnterReady(void (*cb)());
     void onEnterRun(void (*cb)());
     void onEnterComplete(void (*cb)());
+    void onPlayerDied(void (*cb)());
     void onEnterReset(void (*cb)());
     void onEnterFault(void (*cb)());
 
@@ -57,6 +59,7 @@ private:
     void (*_onReady)()     = nullptr;
     void (*_onRun)()       = nullptr;
     void (*_onComplete)()  = nullptr;
+    void (*_onPlayerDied)() = nullptr;
     void (*_onReset)()     = nullptr;
     void (*_onFault)()     = nullptr;
 };
