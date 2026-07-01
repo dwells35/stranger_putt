@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include <FastLED.h>
+#include <SPI.h>
+#include <MFRC522.h>
 #include "HoleNode.h"
 #include "HoleStateMachine.h"
 #include "LEDPatterns.h"
@@ -9,13 +11,16 @@
 #define LED_TYPE     WS2811
 #define COLOR_ORDER  BRG
 
-// How long the completion animation plays before resetting
+#define RFID_SS_PIN  5
+#define RFID_RST_PIN 22
+
 #define COMPLETE_DURATION_MS 3000
 
 CRGB leds[NUM_LEDS];
 HoleNode node("hole1");
 HoleStateMachine hsm(node, "hole1", COMPLETE_DURATION_MS);
 LEDPatterns patterns(leds, NUM_LEDS);
+MFRC522 rfid(RFID_SS_PIN, RFID_RST_PIN);
 
 // --- State-enter callbacks (one-shot on each transition) ---
 
@@ -67,6 +72,24 @@ void onMqttMessage(String& topic, String& payload) {
     else if (payload == "reset")    hsm.reset();
 }
 
+// Reads a present card's UID into uid[] as a colon-separated hex string.
+// Returns the number of bytes read (0 if no card or read failed).
+static uint8_t readUid(char* uid, size_t uidLen) {
+    if (!rfid.PICC_IsNewCardPresent()) return 0;
+    if (!rfid.PICC_ReadCardSerial())   return 0;
+
+    uid[0] = '\0';
+    for (byte i = 0; i < rfid.uid.size; i++) {
+        char hex[4];
+        snprintf(hex, sizeof(hex), i == 0 ? "%02X" : ":%02X", rfid.uid.uidByte[i]);
+        strncat(uid, hex, uidLen - strlen(uid) - 1);
+    }
+
+    rfid.PICC_HaltA();
+    rfid.PCD_StopCrypto1();
+    return rfid.uid.size;
+}
+
 void setup() {
     Serial.begin(115200);
 
@@ -74,6 +97,10 @@ void setup() {
            .setCorrection(TypicalLEDStrip);
     FastLED.setMaxRefreshRate(60);
     FastLED.setBrightness(64);
+
+    SPI.begin();
+    rfid.PCD_Init();
+    Serial.println("RFID reader ready");
 
     hsm.onEnterIdle(onIdle);
     hsm.onEnterReady(onReady);
@@ -90,6 +117,14 @@ void setup() {
 void loop() {
     node.loop();
     hsm.loop();
+
+    if (hsm.getState() == HoleState::IDLE) {
+        char uid[24];
+        if (readUid(uid, sizeof(uid))) {
+            Serial.printf("Tag detected: %s\n", uid);
+            hsm.registerPlayer(uid);
+        }
+    }
 
     HoleState state = hsm.getState();
     if (state == HoleState::IDLE) {
