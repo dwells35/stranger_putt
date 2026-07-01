@@ -7,7 +7,7 @@
 #define LED_PIN      15
 #define NUM_LEDS     60
 #define LED_TYPE     WS2811
-#define COLOR_ORDER  GRB
+#define COLOR_ORDER  BRG
 
 // How long the completion animation plays before resetting
 #define COMPLETE_DURATION_MS 3000
