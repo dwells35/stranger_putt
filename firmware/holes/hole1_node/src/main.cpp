@@ -20,13 +20,19 @@ LEDPatterns patterns(leds, NUM_LEDS);
 // --- State-enter callbacks (one-shot on each transition) ---
 
 void onIdle() {
-    fill_solid(leds, NUM_LEDS, CRGB::Black);
-    FastLED.show();
+    // Animation runs in loop(); nothing to do on entry
 }
 
 void onReady() {
-    // Brief white pulse so players know their input was registered
-    fill_solid(leds, NUM_LEDS, CRGB::White);
+    for (int i = 0; i < 3; i++) {
+        fill_solid(leds, NUM_LEDS, CRGB::Black);
+        FastLED.show();
+        delay(50);
+        fill_solid(leds, NUM_LEDS, CRGB::Green1);
+        FastLED.show();
+        delay(150);
+    }
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
     FastLED.show();
 }
 
@@ -85,8 +91,10 @@ void loop() {
     node.loop();
     hsm.loop();
 
-    // Chase animation runs continuously during COMPLETE
-    if (hsm.getState() == HoleState::COMPLETE) {
+    HoleState state = hsm.getState();
+    if (state == HoleState::IDLE) {
+        patterns.spacedChase(CRGB::Cyan);
+    } else if (state == HoleState::COMPLETE) {
         patterns.chase(CRGB::Cyan);
     }
 }
