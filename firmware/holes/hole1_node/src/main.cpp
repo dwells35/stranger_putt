@@ -41,12 +41,12 @@ void onReady() {
     FastLED.show();
 }
 
-void onRunning() {
+void onRun() {
     fill_solid(leds, NUM_LEDS, CRGB::Cyan);
     FastLED.show();
 }
 
-void onResetting() {
+void onReset() {
     fill_solid(leds, NUM_LEDS, CRGB::Black);
     FastLED.show();
 }
@@ -104,8 +104,8 @@ void setup() {
 
     hsm.onEnterIdle(onIdle);
     hsm.onEnterReady(onReady);
-    hsm.onEnterRunning(onRunning);
-    hsm.onEnterResetting(onResetting);
+    hsm.onEnterRun(onRun);
+    hsm.onEnterReset(onReset);
     hsm.onEnterFault(onFault);
 
     node.onMessage(onMqttMessage);

@@ -4,9 +4,9 @@
 enum class HoleState {
     IDLE,
     READY,
-    RUNNING,
+    RUN,
     COMPLETE,
-    RESETTING,
+    RESET,
     FAULT
 };
 
@@ -31,9 +31,9 @@ public:
     // One-shot callbacks fired on state entry
     void onEnterIdle(void (*cb)());
     void onEnterReady(void (*cb)());
-    void onEnterRunning(void (*cb)());
+    void onEnterRun(void (*cb)());
     void onEnterComplete(void (*cb)());
-    void onEnterResetting(void (*cb)());
+    void onEnterReset(void (*cb)());
     void onEnterFault(void (*cb)());
 
 private:
@@ -55,8 +55,8 @@ private:
 
     void (*_onIdle)()      = nullptr;
     void (*_onReady)()     = nullptr;
-    void (*_onRunning)()   = nullptr;
+    void (*_onRun)()       = nullptr;
     void (*_onComplete)()  = nullptr;
-    void (*_onResetting)() = nullptr;
+    void (*_onReset)()     = nullptr;
     void (*_onFault)()     = nullptr;
 };

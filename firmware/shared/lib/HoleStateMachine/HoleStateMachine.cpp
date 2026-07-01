@@ -18,8 +18,8 @@ void HoleStateMachine::loop() {
     uint32_t elapsed = millis() - _stateEnteredMs;
 
     if (_state == HoleState::COMPLETE && elapsed >= _completeDurationMs) {
-        transitionTo(HoleState::RESETTING);
-    } else if (_state == HoleState::RESETTING && elapsed >= _resetDurationMs) {
+        transitionTo(HoleState::RESET);
+    } else if (_state == HoleState::RESET && elapsed >= _resetDurationMs) {
         transitionTo(HoleState::IDLE);
     }
 }
@@ -34,11 +34,11 @@ void HoleStateMachine::registerPlayer(const char* playerId) {
 void HoleStateMachine::startGame() {
     if (_state != HoleState::READY) return;
     _runStartMs = millis();
-    transitionTo(HoleState::RUNNING);
+    transitionTo(HoleState::RUN);
 }
 
 void HoleStateMachine::completeGame() {
-    if (_state != HoleState::RUNNING) return;
+    if (_state != HoleState::RUN) return;
     publishCompletionEvent();
     transitionTo(HoleState::COMPLETE);
 }
@@ -48,7 +48,7 @@ void HoleStateMachine::fault() {
 }
 
 void HoleStateMachine::reset() {
-    transitionTo(HoleState::RESETTING);
+    transitionTo(HoleState::RESET);
 }
 
 void HoleStateMachine::transitionTo(HoleState next) {
@@ -58,9 +58,9 @@ void HoleStateMachine::transitionTo(HoleState next) {
     switch (next) {
         case HoleState::IDLE:      if (_onIdle)      _onIdle();      break;
         case HoleState::READY:     if (_onReady)     _onReady();     break;
-        case HoleState::RUNNING:   if (_onRunning)   _onRunning();   break;
+        case HoleState::RUN:       if (_onRun)       _onRun();       break;
         case HoleState::COMPLETE:  if (_onComplete)  _onComplete();  break;
-        case HoleState::RESETTING: if (_onResetting) _onResetting(); break;
+        case HoleState::RESET:     if (_onReset)     _onReset();     break;
         case HoleState::FAULT:     if (_onFault)     _onFault();     break;
     }
 }
@@ -86,7 +86,7 @@ void HoleStateMachine::publishCompletionEvent() {
 
 void HoleStateMachine::onEnterIdle(void (*cb)())      { _onIdle = cb; }
 void HoleStateMachine::onEnterReady(void (*cb)())     { _onReady = cb; }
-void HoleStateMachine::onEnterRunning(void (*cb)())   { _onRunning = cb; }
+void HoleStateMachine::onEnterRun(void (*cb)())       { _onRun = cb; }
 void HoleStateMachine::onEnterComplete(void (*cb)())  { _onComplete = cb; }
-void HoleStateMachine::onEnterResetting(void (*cb)()) { _onResetting = cb; }
+void HoleStateMachine::onEnterReset(void (*cb)())     { _onReset = cb; }
 void HoleStateMachine::onEnterFault(void (*cb)())     { _onFault = cb; }
