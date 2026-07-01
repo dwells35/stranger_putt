@@ -4,7 +4,7 @@
 #include "HoleStateMachine.h"
 #include "LEDPatterns.h"
 
-#define LED_PIN      13
+#define LED_PIN      15
 #define NUM_LEDS     60
 #define LED_TYPE     WS2811
 #define COLOR_ORDER  GRB
